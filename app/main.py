@@ -1,17 +1,20 @@
 import streamlit as st
-import pandas as pd
 import joblib
+import os
 
-model = joblib.load("model.pkl")
+st.set_page_config(page_title="RFID Model Viewer", layout="centered")
+st.title("📦 RFID Predictive Maintenance - Model Viewer")
 
-st.title("🔧 RFID Predictive Maintenance AI")
+# Construct the correct path to the model
+current_dir = os.path.dirname(__file__)
+model_path = os.path.abspath(os.path.join(current_dir, "..", "models", "rfid_failure_model.pkl"))
 
-uploaded_file = st.file_uploader("Upload RFID Data CSV", type=["csv"])
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
-    X = df[['rssi', 'temperature', 'voltage', 'read_rate', 'uptime', 'hour']]
-    predictions = model.predict(X)
-    df['prediction'] = ["Failing Soon" if p == 1 else "Healthy" for p in predictions]
-    st.write(df)
-    st.success("Prediction Complete!")
+# Load the model
+try:
+    model = joblib.load(model_path)
+    st.success("✅ Model loaded successfully!")
+    st.subheader("🔍 Model Info")
+    st.code(str(model), language="python")
+except FileNotFoundError:
+    st.error(f"❌ Model file not found at: {model_path}")
+
